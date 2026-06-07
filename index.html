@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blue Lock Team Builder Ultimate</title>
+    <title>Blue Lock / Inazuma Eleven - Team Builder Ultimate</title>
     <style>
         :root {
             --bg-color: #0a1128;
@@ -357,7 +357,7 @@
 </head>
 <body>
 
-    <h1>Blue Lock Team Builder Ultimate</h1>
+    <h1>Blue Lock / Inazuma Eleven - Team Builder Ultimate</h1>
 
     <div class="controls">
         <div>
@@ -550,7 +550,7 @@
             { name: "Busby", team: "Manshine City", club: "Manshine City", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/a/a7/Busby.png/revision/latest?cb=20230521135108" },
             { name: "Swift", team: "Manshine City", club: "Manshine City", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/0/00/Swift.png/revision/latest?cb=20251230181426" },
             { name: "Marc Snuffy", team: "Ubers", club: "Ubers", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/e7/Marc_Snuffy.png" },
-            { name: "Don Lorenzo", team: "Ubers", club: "Ubers", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/d/da/Don_Lorenzo.png" },
+            { name: "Don Lorenzo", team: "Ubers", club: "Ubers", pos: "DF, MC", img: "https://static.wikia.nocookie.net/bluelock/images/d/da/Don_Lorenzo.png" },
             { name: "Canali", team: "Ubers", club: "Ubers", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/f/fc/Canali.png/revision/latest?cb=20251207184157" },
             { name: "Peron", team: "Ubers", club: "Ubers", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/9/99/PERON.png/revision/latest?cb=20260108105946" },
             { name: "Drago", team: "Ubers", club: "Ubers", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/d/dd/DRAGO.png/revision/latest?cb=20260108105011" },
@@ -653,72 +653,63 @@
             return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%231e3a8a"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="%23ffffff">${initials}</text></svg>`;
         }
 
-        function buildAccordion() {
-            const container = document.getElementById('accordion-container');
-            container.innerHTML = '';
+	function buildAccordion() {
+        	const container = document.getElementById('accordion-container');
+        	if (!container) return;
+        	container.innerHTML = '';
+        
+        	categoriesOrder.forEach(catKey => {
+            		const matchPlayers = playersData.filter(p => p.team === catKey);
+            		if (matchPlayers.length === 0) return;
 
-            categoriesOrder.forEach(catKey => {
-                const matchPlayers = playersData.filter(p => p.team === catKey);
-                if (matchPlayers.length === 0) return;
+            		const details = document.createElement('details');
+            		details.innerHTML = `<summary><span>${catKey} (${matchPlayers.length})</span> <span>▼</span></summary>`;
+            		const content = document.createElement('div');
+            		content.className = 'group-content';
 
-                const detailsElement = document.createElement('details');
-                detailsElement.id = `cat-${catKey.replace(/\s+/g, '-')}`;
-                
-                const summaryElement = document.createElement('summary');
-                summaryElement.innerHTML = `<span>${catKey} (${matchPlayers.length})</span> <span>▼</span>`;
-                
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'group-content';
-
-                matchPlayers.forEach(player => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'player-item';
-                    itemDiv.setAttribute('data-name', player.name.toLowerCase());
-                    itemDiv.onclick = () => assignPlayerToSelectedSlot(player);
-
-                    itemDiv.innerHTML = `
-                        <div class="info">
-                            <strong style="font-size: 13px;">${player.name}</strong>
-                            <span class="sub-info">${player.club}</span>
-                        </div>
-                        <div class="player-item-photo">
-                            <img src="${player.img}" alt="${player.name}" onerror="this.onerror=null; this.src=getFallbackAvatar('${player.name}');">
-                        </div>
-                    `;
-                    contentDiv.appendChild(itemDiv);
-                });
-
-                detailsElement.appendChild(summaryElement);
-                detailsElement.appendChild(contentDiv);
-                container.appendChild(detailsElement);
-            });
-        }
+            		matchPlayers.forEach(player => {
+                		const item = document.createElement('div');
+                		item.className = 'player-item';
+                		item.onclick = () => assignPlayerToSelectedSlot(player);
+                // AQUI SE AÑADE LA POSICIÓN:
+                		item.innerHTML = `
+                    		     <div class="info">
+                        		  <strong>${player.name}</strong>
+                        		  <span class="sub-info">${player.club} | ${player.pos || 'N/A'}</span>
+                    		     </div>
+                    		     <div class="player-item-photo"><img src="${player.img}" alt="${player.name}"></div>
+               			 `;
+                		content.appendChild(item);
+            		});
+            		details.appendChild(content);
+            		container.appendChild(details);
+        	    });
+    	}
 
         function changeFormation() {
-            const field = document.getElementById('field');
-            const scheme = document.getElementById('formation-select').value;
-            const currentCoords = formationCoordinates[scheme];
-
-            document.querySelectorAll('.field-slot').forEach(el => el.remove());
-
-            currentCoords.forEach(coord => {
-                const slot = document.createElement('div');
-                slot.className = 'player-slot field-slot';
-                slot.id = coord.id;
-                slot.style.top = coord.top;
-                slot.style.left = coord.left;
-                slot.onclick = () => selectSlot(coord.id);
-
-                field.appendChild(slot);
-                renderSlotContent(coord.id, coord.role);
-            });
-
-            if (selectedSlotId && !document.getElementById(selectedSlotId)) {
-                deselectAllSlots();
-            } else if (selectedSlotId) {
-                selectSlot(selectedSlotId);
-            }
-        }
+        	const field = document.getElementById('field');
+        	const scheme = document.getElementById('formation-select').value;
+        	field.querySelectorAll('.field-slot').forEach(el => el.remove());
+        
+        	formationCoordinates[scheme].forEach(coord => {
+            	   const slot = document.createElement('div');
+            	   slot.className = 'player-slot field-slot';
+            	   slot.id = coord.id;
+                   slot.style.top = coord.top;
+              	   slot.style.left = coord.left;
+            	   slot.onclick = () => { selectSlot(coord.id); handleSlotClick(coord.id); };
+            	   field.appendChild(slot);
+            	   renderSlotContent(coord.id, coord.role);
+        	});
+        	for(let i=1; i<=5; i++) {
+            	    const benchId = `bench-${i}`;
+                    const slot = document.getElementById(benchId);
+            	    if(slot) {
+                	slot.onclick = () => { selectSlot(benchId); handleSlotClick(benchId); };
+                	renderSlotContent(benchId, "SUP");
+            	    }
+        	}
+    	}
 
         function selectSlot(id) {
             deselectAllSlots();
