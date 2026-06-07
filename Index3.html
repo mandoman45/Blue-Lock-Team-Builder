@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Lock Team Builder Ultimate</title>
+    <style>
+        :root {
+            --bg-color: #0a1128;
+            --field-color: #1b4d3e;
+            --field-lines: #ffffff80;
+            --card-bg: #1c2541;
+            --text-color: #ffffff;
+            --accent-color: #00b4d8;
+            --random-color: #10b981;
+            --danger-color: #ef4444;
+            --group-bg: #222e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select, button, .search-bar {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid var(--accent-color);
+            background: var(--bg-color);
+            color: white;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: normal;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        .search-bar:focus {
+            outline: none;
+            border-color: #fff;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        button { cursor: pointer; }
+
+        button.btn-random {
+            border-color: var(--random-color);
+            background: rgba(16, 185, 129, 0.2);
+        }
+        button.btn-random:hover {
+            background: var(--random-color);
+        }
+
+        button.btn-danger {
+            border-color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.2);
+        }
+        button.btn-danger:hover {
+            background: var(--danger-color);
+        }
+
+        .main-container {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            max-width: 1300px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        /* Campo de Fútbol */
+        .football-field {
+            width: 580px;
+            height: 720px;
+            background-color: var(--field-color);
+            border: 4px solid white;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            overflow: hidden;
+        }
+
+        .football-field::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--field-lines);
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            border: 2px solid var(--field-lines);
+            border-radius: 50%;
+        }
+
+        .area-top, .area-bottom {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            height: 105px;
+            border: 2px solid var(--field-lines);
+        }
+        .area-top { top: 0; border-top: none; }
+        .area-bottom { bottom: 0; border-bottom: none; }
+
+        /* Banquillo */
+        .bench-container {
+            width: 580px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        .bench-title {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            text-align: center;
+        }
+
+        .bench-slots {
+            display: flex;
+            justify-content: space-around;
+            gap: 12px;
+        }
+
+        /* Huecos de Posiciones */
+        .player-slot {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .bench-slots .player-slot {
+            position: relative;
+            transform: none;
+            top: auto;
+            left: auto;
+        }
+
+        .player-avatar {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background-image: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .bench-slots .player-avatar {
+            border-color: #e2e8f0;
+            background-image: linear-gradient(135deg, #334155 0%, #475569 100%);
+        }
+
+        .player-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-slot.active .player-avatar {
+            border-color: #fff;
+            box-shadow: 0 0 18px #fff;
+            transform: scale(1.12);
+        }
+
+        .player-name {
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-top: 6px;
+            text-align: center;
+            width: 105px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Panel Lateral Selector */
+        .player-picker-panel {
+            width: 400px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 860px;
+        }
+
+        .picker-header {
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .player-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+
+        /* Desplegables */
+        details {
+            background: var(--group-bg);
+            margin-bottom: 8px;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        summary {
+            padding: 12px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(0,0,0,0.2);
+            user-select: none;
+            outline: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        summary:hover {
+            background: rgba(0, 180, 216, 0.2);
+        }
+
+        .group-content {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .player-item {
+            background: rgba(255,255,255,0.03);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .player-item:hover {
+            background: rgba(0, 180, 216, 0.2);
+            border-left-color: var(--accent-color);
+        }
+
+        .player-item .info {
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+        }
+
+        .player-item .sub-info {
+            font-size: 11px;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .player-item-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-color);
+            background-color: var(--bg-color);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .player-item-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Blue Lock Team Builder Ultimate</h1>
+
+    <div class="controls">
+        <div>
+            <label for="formation-select">Alineación: </label>
+            <select id="formation-select" onchange="changeFormation()">
+                <option value="4-3-3">4-3-3</option>
+                <option value="4-4-2">4-4-2</option>
+                <option value="3-5-2">3-5-2</option>
+            </select>
+        </div>
+        <button class="btn-random" onclick="generateRandomTeam()">Equipo Aleatorio 🎲</button>
+	<button class="btn-random" onclick="generateRandomPositionalTeam()">🎲 Equipo Inteligente</button>
+        <button class="btn-danger" onclick="clearAllSlots()">Limpiar Campo ❌</button>
+    </div>
+    	
+    <div class="main-container">
+        <div class="left-column">
+            <div class="football-field" id="field">
+                <div class="center-circle"></div>
+                <div class="area-top"></div>
+                <div class="area-bottom"></div>
+            </div>
+
+            <div class="bench-container">
+                <div class="bench-title">Suplentes (5 posiciones libres)</div>
+                <div class="bench-slots" id="bench">
+                    <div class="player-slot" id="bench-1" onclick="selectSlot('bench-1')">
+                        <div class="player-avatar">SUP</div>
+                        <div class="player-name">Vacío</div>
+                    </div>
+                    <div class="player-slot" id="bench-2" onclick="selectSlot('bench-2')">
+                        <div class="player-avatar">SUP</div>
+                        <div class="player-name">Vacío</div>
+                    </div>
+                    <div class="player-slot" id="bench-3" onclick="selectSlot('bench-3')">
+                        <div class="player-avatar">SUP</div>
+                        <div class="player-name">Vacío</div>
+                    </div>
+                    <div class="player-slot" id="bench-4" onclick="selectSlot('bench-4')">
+                        <div class="player-avatar">SUP</div>
+                        <div class="player-name">Vacío</div>
+                    </div>
+                    <div class="player-slot" id="bench-5" onclick="selectSlot('bench-5')">
+                        <div class="player-avatar">SUP</div>
+                        <div class="player-name">Vacío</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="player-picker-panel">
+            <div class="picker-header">
+                <input type="text" id="search" class="search-bar" placeholder="Buscar jugador por nombre..." oninput="filterPlayers()">
+                <div style="font-size: 12px; color: var(--accent-color); font-weight: bold; text-align: center;" id="slot-status">
+                    Selecciona un espacio en el campo o banquillo
+                </div>
+            </div>
+            <div class="player-list" id="accordion-container"></div>
+        </div>
+    </div>
+
+
+    <script>
+        const equipos = ["Equipo Z", "Equipo Y", "Equipo X", "Equipo W", "Equipo V", "Segunda Selección", "Quinteto Mundial", "Selección Sub-20", "Bastard Munchen", "F.C Barcha", "Manshine City", "Ubers", "P.X.G", "Nigeria", "Francia", "Desconocido"];
+        
+       const playersData = [
+            { name: "Ryosuke Kira", team: "Equipo Z", club: "Side-B, Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/b1/Ryosuke_Kira.png" },
+            { name: "Asahi Naruhaya", team: "Equipo Z", club: "Eliminado", pos: "FW", img: "https://i.ytimg.com/vi/xyaov95ywao/maxresdefault.jpg" },
+            { name: "Gin Gagamaru", team: "Equipo Z", club: "Bastard Munchen", pos: "FW, GK", img: "https://static.wikia.nocookie.net/bluelock/images/7/79/Gin_Gagamaru.png" },
+            { name: "Gurimu Igarashi", team: "Equipo Z", club: "Bastard Munchen", pos: "FW, LD", img: "https://static.wikia.nocookie.net/bluelock/images/a/aa/Gurimu_Igarashi.png" },
+            { name: "Hyoma Chigiri", team: "Equipo Z", club: "Manshine City", pos: "FW, LD, EI", img: "https://i.namu.wiki/i/_lzclsrAaam6Kv3jgiZLRG5PrVqmoDbIKRI36xIE1-jmrh8WqPMDCsiifjwI4OYZYow_NEYXh057JUlnWJzenA.webp" },
+            { name: "Jingo Raichi", team: "Equipo Z", club: "Bastard Munchen", pos: "FW, MC Defensivo", img: "https://i.pinimg.com/736x/a1/43/c3/a143c3331a45e761bda5552328004f88.jpg" },
+            { name: "Meguru Bachira", team: "Equipo Z", club: "F.C Barcha", pos: "EI, MC izquierdo, FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f5/Meguru_Bachira.png" },
+            { name: "Okuhito Iemon", team: "Equipo Z", club: "Eliminado", pos: "FW, GK", img: "https://i.pinimg.com/736x/ae/c6/0f/aec60f820d5eb0e32878141c7f4ba968.jpg" },
+            { name: "Rensuke Kunigami", team: "Equipo Z", club: "Bastard Munchen", pos: "FW, MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/8/87/Rensuke_Kunigami.png" },
+            { name: "Wataru Kuon", team: "Equipo Z", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/ed/Wataru_Kuon.png" },
+            { name: "Yoichi Isagi", team: "Equipo Z", club: "Bastard Munchen", pos: "FW, ED", img: "https://static.wikia.nocookie.net/bluelock/images/3/39/Yoichi_Isagi.png" },
+            { name: "Yudai Imamura", team: "Equipo Z", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/2/2e/Yudai_Imamura.png" },
+            { name: "Ashime Suzuki", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/9/9c/Ashime_Suzuki.png" },
+            { name: "Fuma Rokkau", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f1/Fuma_Rokkaku.png" },
+            { name: "Iori Sato", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/0/05/Iori_Sato.png" },
+            { name: "Ikki Nikko", team: "Equipo Y", club: "Ubers", pos: "FW, DF, MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/a/a4/Ikki_Niko.png/revision/latest/scale-to-width/360?cb=20250824231754&path-prefix=es" },
+            { name: "Hibiki Ookawa", team: "Equipo Y", club: "Eliminado, Side-B", pos: "FW", img: "https://i.pinimg.com/736x/25/03/62/2503628f966760056a1df625adf818e2.jpg" },
+            { name: "Hyuga Koshiba", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/9/93/Hyuga_Koshiba.png" },
+            { name: "Juraki Ito", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/2/2a/Juraki_Ito.png" },
+            { name: "Maremo Takeyama", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/3/30/Mareto_Takeyama.png" },
+            { name: "Shinichi Konan", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/a/af/Shinichi_Konan.png" },
+            { name: "Soshi Kagura", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/e6/Soshi_Kagura.png" },
+            { name: "Tobio Madoka", team: "Equipo Y", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/1/1f/Tobio_Madoka.png" },
+            { name: "Shouei Barou", team: "Equipo X", club: "Ubers", pos: "FW, EI", img: "https://static1.personalitydatabase.net/2/pdb-images-prod/3dcdfc43/profile_images/84a085941fe54476bb27d3644847eab9.png" },
+            { name: "Yuza Dokomo", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/e8/Yuza_Dokomo.png" },
+            { name: "Burai Daido", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/9/9f/Burai_Daido.png" },
+            { name: "Rian Sanga", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/7/7e/Rian_Sanga.png" },
+            { name: "Daiya Morinaga", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/1/16/Daiya_Morinaga.png" },
+            { name: "Chihiro Ezaki", team: "Equipo X", club: "Eliminado", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f8/Chihiro_Ezaki.png" },
+            { name: "Tsukoteru Eiyu", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/9/9c/Tsukoteru_Eiyu.png" },
+            { name: "Haato Meiji", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/d/d2/Haato_Meiji.png" },
+            { name: "Kosei Otsuka", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/7/76/Kosei_Otsuka.png" },
+            { name: "Ruto Kora", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/9/9e/Ruto_Kora.png" },
+            { name: "Yawara Banku", team: "Equipo X", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/5/5c/Yawara_Banku.png" },
+            { name: "Keisuke Wanima", team: "Equipo W", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/a/a6/Keisuke_Wanima.png" },
+            { name: "Junichi Wanima", team: "Equipo W", club: "Manshine City", pos: "FW", img: "https://i.pinimg.com/474x/2d/41/09/2d410949767ed69eed07ac66628a9f08.jpg" },
+            { name: "Kei Shishiya", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/c/c4/Kei_Shishiya.png" },
+            { name: "Hiromu Munakata", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/8/85/Hiromu_Munakata.png" },
+            { name: "Raito Fuwa", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/6/65/Raito_Fuwa.png" },
+            { name: "Noboru Jigen", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/3/35/Noboru_Jigen.png" },
+            { name: "Koki Mera", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/8/8f/Koki_Mera.png" },
+            { name: "Kai Tokita", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/3/34/Kai_Tokita.png" },
+            { name: "Yusei Amazora", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/4/4c/Yusei_Amazora.png" },
+            { name: "Takuma Isezaki", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/ea/Takuma_Isezaki.png" },
+            { name: "Yujin Koshinaka", team: "Equipo W", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/0/0f/Yujin_Koshinaka.png" },
+            { name: "Zantetsu Tsurugi", team: "Equipo V", club: "P.X.G", pos: "FW, ED", img: "https://i.pinimg.com/736x/ed/b8/88/edb8880463570cdab0e0e3e00dfe22e9.jpg" },
+            { name: "Reo Mikage", team: "Equipo V", club: "Manshine City", pos: "FW, MC Derecho, MC Defensivo, DF", img: "https://i.pinimg.com/736x/d3/65/92/d365925c3741b1e35bffd81d7412f2b5.jpg" },
+            { name: "Seishiro Nagi", team: "Equipo V", club: "Manshine City, Side-B", pos: "FW, ED, MC", img: "https://static.wikia.nocookie.net/bluelock/images/c/c9/Seishiro_Nagi.png" },
+            { name: "Sota Nemoto", team: "Equipo V", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/e7/Sota_Nemoto.png" },
+            { name: "Kisaburo Hijikita", team: "Equipo V", club: "Eliminado", pos: "FW, GK", img: "https://static.wikia.nocookie.net/bluelock/images/c/cc/Kisaburo_Hijikata.png" },
+            { name: "Kanji Torikai", team: "Equipo V", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/d/de/Kanji_Torikai.png" },
+            { name: "Hirakazu Midorikawa", team: "Equipo V", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/a/a9/Hirakazu_Midorikawa.png" },
+            { name: "Retsu Nerima", team: "Equipo V", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/fe/Retsu_Nerima.png" },
+            { name: "Shuhei Ebina", team: "Equipo V", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f9/Shuhei_Ebina.png" },
+            { name: "Masumi Atatame", team: "Equipo V", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/ff/Masumi_Atatame.png" },
+            { name: "Rikiya Hohai", team: "Equipo V", club: "Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/bc/Rikiya_Hohai.png" },
+            { name: "Aiki Himizu", team: "Segunda Seleccion", club: "F.C Barcha, Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/7/74/Aiki_Himizu.png" },
+            { name: "Akira Endoji", team: "Segunda Seleccion", club: "P.X.G", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/1/19/Akira_Endoji.png" },
+            { name: "Aoshi Tokimitsu", team: "Segunda Seleccion", club: "P.X.G", pos: "FW, DF", img: "https://static.wikia.nocookie.net/bluelock/images/b/b4/Aoshi_Tokimitsu.png" },
+            { name: "Eita Otoya", team: "Segunda Seleccion", club: "F.C Barcha", pos: "FW, ED, LI", img: "https://static.wikia.nocookie.net/bluelock/images/2/23/Eita_Otoya.png" },
+            { name: "Hajime Nishioka", team: "Segunda Seleccion", club: "Manshine City, Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/b5/Hajime_Nishioka.png" },
+            { name: "Haruhiko Yuzu", team: "Segunda Seleccion", club: "P.X.G", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/bc/Haruhiko_Yuzu.png" },
+            { name: "Jin Kiyora", team: "Segunda Seleccion", club: "Bastard Munchen", pos: "FW, LI", img: "https://static.wikia.nocookie.net/bluelock/images/a/a9/Jin_Kiyora.png" },
+            { name: "Jyubei Aryu", team: "Segunda Seleccion", club: "Ubers", pos: "FW, DF", img: "https://static.wikia.nocookie.net/bluelock/images/4/40/Jyubei_Aryu.png" },
+            { name: "Kairu Saramadara", team: "Segunda Seleccion", club: "Manshine City", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/a/ac/Kairu_Saramadara.png" },
+            { name: "Kenyu Yukimiya", team: "Segunda Seleccion", club: "Bastard Munchen", pos: "FW, LI, EI", img: "https://preview.redd.it/yukimiya-is-super-underrated-v0-5xpx1k7vfo9f1.jpeg?width=640&crop=smart&auto=webp&s=5ce49623be74e2c2185a4e5f0c5f223b924c3b0d" },
+            { name: "Kyohei Shiguma", team: "Segunda Seleccion", club: "Ubers", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/4/46/Kyohei_Shiguma.png" },
+            { name: "Nijiro Nanase", team: "Segunda Seleccion", club: "P.X.G", pos: "FW, EI", img: "https://static.wikia.nocookie.net/bluelock/images/8/86/Nijiro_Nanase.png" },
+            { name: "Ranze Kurona", team: "Segunda Seleccion", club: "Bastard Munchen", pos: "FW, LD", img: "https://static.wikia.nocookie.net/bluelock/images/a/ae/Ranze_Kurona.png/revision/latest/scale-to-width/360?cb=20251031011435&path-prefix=es" },
+            { name: "Reiji Hiiragi", team: "Segunda Seleccion", club: "Manshine City", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/d/dd/Reiji_Hiiragi.png" },
+            { name: "Rin Itoshi", team: "Segunda Seleccion", club: "P.X.G", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/1/12/Rin_Itoshi.png/revision/latest/scale-to-width-down/1200?cb=20230313015001&path-prefix=es" },
+            { name: "Ryusei Shidou", team: "Segunda Seleccion", club: "P.X.G", pos: "FW, ED", img: "https://i.redd.it/ryusei-shido-panel-redraw-v0-79gejg8de9ce1.jpg?width=736&format=pjpg&auto=webp&s=36b7afacdfcd11ef43dbb4b72e01b7be7723c1a2" },
+            { name: "Shizuka Haiji", team: "Segunda Seleccion", club: "F.C Barcha", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/9/9d/Shizuka_Haiji.png" },
+            { name: "Shigen Tanaka", team: "Segunda Seleccion", club: "Ubers", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/e4/Shingen_Tanaka.png" },
+            { name: "Taiga Tsunzaki", team: "Segunda Seleccion", club: "Manshine City", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/a/a1/Taiga_Tsunzaki.png" },
+            { name: "Tabito Karasu", team: "Segunda Seleccion", club: "P.X.G", pos: "FW, MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/4/4b/Tabito_Karasu.png" },
+            { name: "Tetsu Sokura", team: "Segunda Seleccion", club: "F.C Barcha", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/d/d8/Tetsu_Sokura.png" },
+            { name: "Yo Hiori", team: "Segunda Seleccion", club: "Bastard Munchen", pos: "FW, LD, LI, EI, ED", img: "https://static.wikia.nocookie.net/bluelock/images/6/65/Yo_Hiori.png" },
+            { name: "Yukkio Ishikari", team: "Segunda Seleccion", club: "Ubers", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/0/01/Yukio_Ishikari.png" },
+            { name: "Adam Blake", team: "Quinteto Mundial", club: "Otros", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/d/d4/Adam_Blake.png" },
+            { name: "Dada Silva", team: "Quinteto Mundial", club: "Otros", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/7/71/Dada_Silva.png" },
+            { name: "Julian Loki", team: "Quinteto Mundial", club: "P.X.G", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f5/Julian_Loki_%28Anime%29.png/revision/latest/scale-to-width/360?cb=20231115020319&path-prefix=es" },
+            { name: "Leonardo Luna", team: "Quinteto Mundial", club: "Re Al", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/b4/Leonardo_Luna.png" },
+            { name: "Pablo Cavasoz", team: "Quinteto Mundial", club: "Otros", pos: "FW", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsdQ2hI7pFBQQ052T1CynyDdzX1EsJr2kVDA&s" },
+            { name: "Gen Fukaku", team: "Selección Sub-20", club: "Ubers", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/4/44/Gen_Fukaku.png" },
+            { name: "Haru Hayate", team: "Selección Sub-20", club: "F.C Barcha", pos: "MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/4/49/Haru_Hayate.png" },
+            { name: "Itsuki Wakatsuki", team: "Selección Sub-20", club: "F.C Barcha", pos: "MC Defensivo", img: "https://i.pinimg.com/736x/3d/9f/0b/3d9f0bd88d99e48e6c446d63185023ba.jpg" },
+            { name: "Kazuma Niou", team: "Selección Sub-20", club: "Manshine City", pos: "DF", img: "https://i.pinimg.com/736x/8d/c5/ff/8dc5ff06c00daf7e523b74b0def19bab.jpg" },
+            { name: "Kento Chou", team: "Selección Sub-20", club: "P.X.G", pos: "EI", img: "https://i.pinimg.com/736x/92/3b/c8/923bc8411e0d4842823b095dfa8c82fb.jpg" },
+            { name: "Miroku Darai", team: "Selección Sub-20", club: "F.C Barcha", pos: "LI", img: "https://static.wikia.nocookie.net/bluelock/images/4/45/Miroku_Darai.png" },
+            { name: "Sae Itoshi", team: "Selección Sub-20", club: "Re Al", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/f/f3/Sae_Itoshi.png" },
+            { name: "Shuuto Sendou", team: "Selección Sub-20", club: "Ubers", pos: "FW", img: "https://preview.redd.it/sendou-is-the-most-attractive-blue-lock-character-v0-4bm217mpmnze1.jpg?width=640&crop=smart&auto=webp&s=6ce911b99b4a361200e84667927a6481e9296f5d" },
+            { name: "Oliver Aiku", team: "Selección Sub-20", club: "Ubers", pos: "FW, DF", img: "https://static.wikia.nocookie.net/bluelock/images/f/fc/Oliver_Aiku.png" },
+            { name: "Teppei Neru", team: "Selección Sub-20", club: "Bastard Munchen", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/2/28/Teppei_Neru.png" },
+            { name: "Teru Kitsunezato", team: "Selección Sub-20", club: "F.C Barcha", pos: "ED", img: "https://static.wikia.nocookie.net/bluelock/images/2/26/Teru_Kitsunezato.png" },
+            { name: "Alexis Ness", team: "Bastard Munchen", club: "Bastard Munchen", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/1/18/Alexis_Ness.png" },
+            { name: "Ali", team: "Bastard Munchen", club: "Bastard Munchen", pos: "MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/0/02/Ali.png/revision/latest?cb=20230331095523" },
+            { name: "Bachman", team: "Bastard Munchen", club: "Bastard Munchen", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/d/d8/Bachman.png" },
+            { name: "Benedict Grim", team: "Bastard Munchen", club: "Bastard Munchen", pos: "MC, EI", img: "https://static.wikia.nocookie.net/bluelock/images/b/b0/Benedict_Grim.png" },
+            { name: "Birkenstock", team: "Bastard Munchen", club: "Bastard Munchen", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/c/c3/Birkenstock.png/revision/latest?cb=20260108102456" },
+            { name: "Erik Gesner", team: "Bastard Munchen", club: "Bastard Munchen", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/0/04/Erik_Gesner.png" },
+            { name: "Igor Schneider", team: "Bastard Munchen", club: "Bastard Munchen", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/d/d7/Igor_Schneider.png" },
+            { name: "Michael Kaiser", team: "Bastard Munchen", club: "Re Al, Bastard Munchen", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f0/Michael_Kaiser.png" },
+            { name: "Mensah", team: "Bastard Munchen", club: "Bastard Munchen", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/d/de/Mensah.png/revision/latest?cb=20260402203746" },
+            { name: "Ndiaye", team: "Bastard Munchen", club: "Bastard Munchen", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/c/c1/Ndiaye.png" },
+            { name: "Noel Noa", team: "Bastard Munchen", club: "Bastard Munchen", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/1/1d/Noel_Noa.png" },
+            { name: "Theo Sachs", team: "Bastard Munchen", club: "Bastard Munchen", pos: "LI", img: "https://static.wikia.nocookie.net/bluelock/images/6/66/Theo_Sachs.png" },
+            { name: "Lavinho", team: "F.C Barcha", club: "F.C Barcha", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/ba/Lavinho.png" },
+            { name: "Ignacio Lara", team: "F.C Barcha", club: "F.C Barcha", pos: "EI", img: "https://static.wikia.nocookie.net/bluelock/images/f/f7/Ignacio_Lara.png" },
+            { name: "Ruiz", team: "F.C Barcha", club: "F.C Barcha", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/d/d4/Ruiz.png" },
+            { name: "Picasso", team: "F.C Barcha", club: "F.C Barcha", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/5/5b/Picasso.png" },
+            { name: "Espino", team: "F.C Barcha", club: "F.C Barcha", pos: "MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/a/a2/Espesso.png/revision/latest?cb=20230529162538" },
+            { name: "So", team: "F.C Barcha", club: "F.C Barcha", pos: "LI", img: "https://static.wikia.nocookie.net/bluelock/images/f/f5/So.png/revision/latest?cb=20260108104632" },
+            { name: "Bos", team: "F.C Barcha", club: "F.C Barcha", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/8/82/Bos.png" },
+            { name: "Gómez", team: "F.C Barcha", club: "F.C Barcha", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/0/03/Gomez.png/revision/latest?cb=20260108103815" },
+            { name: "Urzaiz", team: "F.C Barcha", club: "F.C Barcha", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/3/38/Uraziz.png" },
+            { name: "Moro", team: "F.C Barcha", club: "F.C Barcha", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/5/5e/Moro.png" },
+            { name: "Chris Prince", team: "Manshine City", club: "Manshine City", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f1/Chris_Prince.png" },
+            { name: "Agi", team: "Manshine City", club: "Manshine City", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/5/5c/Agi.png" },
+            { name: "Driver", team: "Manshine City", club: "Manshine City", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/d/d1/Driver.png/revision/latest?cb=20230521131404" },
+            { name: "Damon", team: "Manshine City", club: "Manshine City", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/8/82/Damon.png/revision/latest?cb=20251230181230" },
+            { name: "Arthur", team: "Manshine City", club: "Manshine City", pos: "LI", img: "https://static.wikia.nocookie.net/bluelock/images/5/50/Arthur.png/revision/latest?cb=20251224162143" },
+            { name: "Young", team: "Manshine City", club: "Manshine City", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/d/d2/Young.png/revision/latest?cb=20230521135057" },
+            { name: "Rooke", team: "Manshine City", club: "Manshine City", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/1/1b/Rook.png/revision/latest?cb=20251230181331" },
+            { name: "Busby", team: "Manshine City", club: "Manshine City", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/a/a7/Busby.png/revision/latest?cb=20230521135108" },
+            { name: "Swift", team: "Manshine City", club: "Manshine City", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/0/00/Swift.png/revision/latest?cb=20251230181426" },
+            { name: "Marc Snuffy", team: "Ubers", club: "Ubers", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/e/e7/Marc_Snuffy.png" },
+            { name: "Don Lorenzo", team: "Ubers", club: "Ubers", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/d/da/Don_Lorenzo.png" },
+            { name: "Canali", team: "Ubers", club: "Ubers", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/f/fc/Canali.png/revision/latest?cb=20251207184157" },
+            { name: "Peron", team: "Ubers", club: "Ubers", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/9/99/PERON.png/revision/latest?cb=20260108105946" },
+            { name: "Drago", team: "Ubers", club: "Ubers", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/d/dd/DRAGO.png/revision/latest?cb=20260108105011" },
+            { name: "Abdi", team: "Ubers", club: "Ubers", pos: "LI", img: "https://static.wikia.nocookie.net/bluelock/images/2/2a/ABDI.png/revision/latest?cb=20260108110003" },
+            { name: "Rico", team: "Ubers", club: "Ubers", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/1/1c/RICO.png/revision/latest?cb=20260108110020" },
+            { name: "Charles Chevalier", team: "P.X.G", club: "P.X.G", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/6/6d/Charles.png/revision/latest?cb=20250731185927" },
+            { name: "Chapa", team: "P.X.G", club: "P.X.G", pos: "DF, LI", img: "https://static.wikia.nocookie.net/bluelock/images/a/a8/Chapa_PXG.png/revision/latest?cb=20251122033454" },
+            { name: "Gabon", team: "P.X.G", club: "P.X.G", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/e/e7/Gabon.png" },
+            { name: "Michelin", team: "P.X.G", club: "P.X.G", pos: "DF, LD", img: "https://static.wikia.nocookie.net/bluelock/images/1/1a/Michelin.png/revision/latest?cb=20240609144957" },
+            { name: "Renoir", team: "P.X.G", club: "P.X.G", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/b/b5/Renoir.png" },
+            { name: "Onazi", team: "Nigeria", club: "Ninguno", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/5/52/Onazi_Headshot.png/revision/latest?cb=20250919193328" },
+            { name: "Kuso", team: "Nigeria", club: "Ninguno", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/2/27/KusoPortrait.png/revision/latest?cb=20250919194849" },
+            { name: "Bello", team: "Nigeria", club: "Ninguno", pos: "ED", img: "https://static.wikia.nocookie.net/bluelock/images/0/0b/Bello.png" },
+            { name: "Oboabona", team: "Nigeria", club: "Ninguno", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/8/8a/OboabonaHeadshot.png/revision/latest?cb=20250919194241" },
+            { name: "Agbim", team: "Nigeria", club: "Ninguno", pos: "GK", img: "https://static.wikia.nocookie.net/bluelock/images/e/e0/AgbimPortrait.png/revision/latest?cb=20250801171055" },
+            { name: "Ekpo", team: "Nigeria", club: "Ninguno", pos: "DF", img: "https://static.wikia.nocookie.net/bluelock/images/2/2e/Epko_Headshot.png/revision/latest?cb=20250919204023" },
+            { name: "Sadiq", team: "Nigeria", club: "Ninguno", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/1/16/Sadiq_Portrait.png/revision/latest?cb=20250919205012" },
+            { name: "Umaru", team: "Nigeria", club: "Ninguno", pos: "EI", img: "https://static.wikia.nocookie.net/bluelock/images/c/c5/UmaruPortrait.png/revision/latest?cb=20250919203628" },
+            { name: "Kaita", team: "Nigeria", club: "Ninguno", pos: "LI", img: "https://static.wikia.nocookie.net/bluelock/images/d/d7/KaitaPortrait.png/revision/latest?cb=20250919205822" },
+            { name: "Ezekiel", team: "Nigeria", club: "Ninguno", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/c/c7/EzekielPortrait.png/revision/latest?cb=20250919203416" },
+            { name: "Momodu", team: "Nigeria", club: "Ninguno", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/d/df/Momodu_Portrait.png/revision/latest?cb=20251123153415" },
+            { name: "Vivian Hugo", team: "Francia", club: "Arsenal", pos: "MC", img: "https://static.wikia.nocookie.net/bluelock/images/0/02/Hugo.png" },
+            { name: "Hermes", team: "Francia", club: "Otros", pos: "MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/0/0d/Hermes.png" },
+            { name: "Dalon", team: "Francia", club: "Otros", pos: "LD", img: "https://static.wikia.nocookie.net/bluelock/images/f/f2/Delon.png" },
+            { name: "Bats", team: "Francia", club: "Otros", pos: "MC Defensivo", img: "https://static.wikia.nocookie.net/bluelock/images/1/11/Bats.png" },
+            { name: "Camus", team: "Francia", club: "Otros", pos: "ED", img: "https://static.wikia.nocookie.net/bluelock/images/a/ad/Camus.png" },
+            { name: "Layden", team: "Francia", club: "Otros", pos: "EI", img: "https://static.wikia.nocookie.net/bluelock/images/3/3c/Leyden.png" },
+            { name: "Bunny Iglesias", team: "F.C Barcha", club: "F.C Barcha", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/8/81/Bunny_Iglesias.png" },
+            { name: "Ryo Nameoka", team: "Equipo V", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/bd/Ryo_Nameoka.png" },
+            { name: "Haneru Shindo", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/1/13/ShindoPortrait.png/revision/latest?cb=20251125190531" },
+            { name: "Shigeo Mizuki", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/3/33/Shigeo_Mizuki.png" },
+            { name: "Kevin Iehitori", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/9/92/Kevin_Iehitori.png" },
+            { name: "Neita Tami", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/1/13/Neita_Tami.png" },
+            { name: "Akira Shirosawa", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/a/ad/Akira_Shirosawa.png" },
+            { name: "Takeru Miike", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/6/6b/Takashi_Nishiyama.png" },
+            { name: "Yasuji Ozu", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/f/f7/Takeru_Miike.png" },
+            { name: "Takashi Nishiyama", team: "Side-B", club: "Side-B", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/0/07/Yasuji_Ozu.png" }
+	];
+
+        const categoriesOrder = [
+            "Equipo Z", "Equipo Y", "Equipo X", "Equipo W", "Equipo V",
+            "Segunda Seleccion", "Quinteto Mundial", "Selección Sub-20",
+            "Bastard Munchen", "F.C Barcha", "Manshine City", "Ubers",
+            "P.X.G", "Nigeria", "Francia", "Side-B"
+	 ];
+
+        const formationCoordinates = {
+            "4-3-3": [
+                { id: "slot-1", role: "PO", top: "90%", left: "50%" },
+                { id: "slot-2", role: "DFI", top: "72%", left: "15%" },
+                { id: "slot-3", role: "DFC", top: "75%", left: "38%" },
+                { id: "slot-4", role: "DFC", top: "75%", left: "62%" },
+                { id: "slot-5", role: "DFD", top: "72%", left: "85%" },
+                { id: "slot-6", role: "MC", top: "54%", left: "25%" },
+                { id: "slot-7", role: "MCD", top: "58%", left: "50%" },
+                { id: "slot-8", role: "MC", top: "54%", left: "75%" },
+                { id: "slot-9", top: "28%", left: "20%", role: "EI" },
+                { id: "slot-10", top: "22%", left: "50%", role: "DC" },
+                { id: "slot-11", top: "28%", left: "80%", role: "ED" }
+            ],
+            "4-4-2": [
+                { id: "slot-1", role: "PO", top: "90%", left: "50%" },
+                { id: "slot-2", role: "DFI", top: "74%", left: "15%" },
+                { id: "slot-3", role: "DFC", top: "76%", left: "38%" },
+                { id: "slot-4", role: "DFC", top: "76%", left: "62%" },
+                { id: "slot-5", role: "DFD", top: "74%", left: "85%" },
+                { id: "slot-6", role: "MI", top: "50%", left: "15%" },
+                { id: "slot-7", role: "MC", top: "54%", left: "38%" },
+                { id: "slot-8", role: "MC", top: "54%", left: "62%" },
+                { id: "slot-9", role: "MD", top: "50%", left: "85%" },
+                { id: "slot-10", top: "24%", left: "33%", role: "DC" },
+                { id: "slot-11", top: "24%", left: "67%", role: "DC" }
+            ],
+            "3-5-2": [
+                { id: "slot-1", role: "PO", top: "90%", left: "50%" },
+                { id: "slot-2", role: "DFC", top: "75%", left: "25%" },
+                { id: "slot-3", role: "DFC", top: "77%", left: "50%" },
+                { id: "slot-4", role: "DFC", top: "75%", left: "75%" },
+                { id: "slot-5", role: "MI", top: "50%", left: "15%" },
+                { id: "slot-6", role: "MCD", top: "56%", left: "35%" },
+                { id: "slot-7", role: "MCO", top: "44%", left: "50%" },
+                { id: "slot-8", role: "MCD", top: "56%", left: "65%" },
+                { id: "slot-9", role: "MD", top: "50%", left: "85%" },
+                { id: "slot-10", top: "24%", left: "33%", role: "DC" },
+                { id: "slot-11", top: "24%", left: "67%", role: "DC" }
+            ]
+        };
+
+    let selectedSlotId = null;
+    let firstSelectedSlotId = null;
+    let pitchPlayersState = {};
+
+    function init() {
+        buildAccordion();
+        changeFormation();
+    }
+
+    // --- LÓGICA DE INTERCAMBIO (SWAP) ---
+    function handleSlotClick(slotId) {
+        if (selectedSlotId && selectedSlotId === slotId) return;
+
+        if (!firstSelectedSlotId) {
+            firstSelectedSlotId = slotId;
+            document.getElementById(slotId).style.border = "3px solid #00b4d8"; 
+        } else {
+            const secondSlotId = slotId;
+            if (firstSelectedSlotId !== secondSlotId) {
+                const p1 = pitchPlayersState[firstSelectedSlotId];
+                const p2 = pitchPlayersState[secondSlotId];
+                pitchPlayersState[firstSelectedSlotId] = p2;
+                pitchPlayersState[secondSlotId] = p1;
+                renderSlotContent(firstSelectedSlotId, getCurrentSlotRole(firstSelectedSlotId));
+                renderSlotContent(secondSlotId, getCurrentSlotRole(secondSlotId));
+            }
+            document.getElementById(firstSelectedSlotId).style.border = ""; 
+            firstSelectedSlotId = null;
+        }
+    }
+
+    // --- RENDERIZADO DE SLOTS ---
+    function renderSlotContent(id, defaultRole = "JUG") {
+        const slot = document.getElementById(id);
+        if (!slot) return;
+        slot.onclick = () => handleSlotClick(id);
+
+        const player = pitchPlayersState[id];
+        if (player) {
+            slot.innerHTML = `
+                <div class="player-avatar" style="border-color: var(--accent-color);">
+                    <img src="${player.img}" alt="${player.name}" onerror="this.onerror=null; this.src=getFallbackAvatar('${player.name}');">
+                </div>
+                <div class="player-name">${player.name}</div>
+            `;
+        } else {
+            const displayRole = id.startsWith('bench') ? "SUP" : defaultRole;
+            slot.innerHTML = `<div class="player-avatar">${displayRole}</div><div class="player-name">Vacío</div>`;
+        }
+    }
+
+    // --- CONSTRUCCIÓN DEL ACORDEÓN (LISTA DE JUGADORES) ---
+    function buildAccordion() {
+        const container = document.getElementById('accordion-container');
+        container.innerHTML = '';
+        categoriesOrder.forEach(catKey => {
+            const matchPlayers = playersData.filter(p => p.team === catKey);
+            if (matchPlayers.length === 0) return;
+
+            const detailsElement = document.createElement('details');
+            detailsElement.id = `cat-${catKey.replace(/\s+/g, '-')}`;
+            detailsElement.innerHTML = `<summary><span>${catKey} (${matchPlayers.length})</span> <span>▼</span></summary>`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'group-content';
+
+            matchPlayers.forEach(player => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'player-item';
+                itemDiv.setAttribute('data-name', player.name.toLowerCase());
+                itemDiv.onclick = () => assignPlayerToSelectedSlot(player);
+                itemDiv.innerHTML = `
+                    <div class="info"><strong>${player.name}</strong><span class="sub-info">${player.club}</span></div>
+                    <div class="player-item-photo"><img src="${player.img}" alt="${player.name}" onerror="this.onerror=null; this.src=getFallbackAvatar('${player.name}');"></div>
+                `;
+                contentDiv.appendChild(itemDiv);
+            });
+            detailsElement.appendChild(contentDiv);
+            container.appendChild(detailsElement);
+        });
+    }
+
+    // --- FUNCIONES DE ASIGNACIÓN Y RESET ---
+    function assignPlayerToSelectedSlot(player) {
+        if (!selectedSlotId) { alert("Selecciona un hueco primero."); return; }
+        for (let key in pitchPlayersState) {
+            if (pitchPlayersState[key] && pitchPlayersState[key].name === player.name) {
+                pitchPlayersState[key] = null;
+                renderSlotContent(key, getCurrentSlotRole(key));
+            }
+        }
+        pitchPlayersState[selectedSlotId] = player;
+        renderSlotContent(selectedSlotId, getCurrentSlotRole(selectedSlotId));
+        deselectAllSlots();
+    }
+
+    function changeFormation() {
+        const field = document.getElementById('field');
+        const scheme = document.getElementById('formation-select').value;
+        document.querySelectorAll('.field-slot').forEach(el => el.remove());
+        formationCoordinates[scheme].forEach(coord => {
+            const slot = document.createElement('div');
+            slot.className = 'player-slot field-slot';
+            slot.id = coord.id;
+            slot.style.top = coord.top;
+            slot.style.left = coord.left;
+            slot.onclick = () => selectSlot(coord.id);
+            field.appendChild(slot);
+            renderSlotContent(coord.id, coord.role);
+        });
+        for(let i=1; i<=5; i++) renderSlotContent(`bench-${i}`, "SUP");
+    }
+
+    function generateRandomTeam() {
+        clearAllSlots();
+        let pool = [...playersData].sort(() => Math.random() - 0.5);
+        const scheme = document.getElementById('formation-select').value;
+        const slots = formationCoordinates[scheme];
+        
+        slots.forEach((coord, i) => { if(pool[i]) { pitchPlayersState[coord.id] = pool[i]; renderSlotContent(coord.id, coord.role); } });
+        for(let i=1; i<=5; i++) { 
+            let p = pool[slots.length + i - 1]; 
+            if(p) { pitchPlayersState[`bench-${i}`] = p; renderSlotContent(`bench-${i}`, "SUP"); } 
+        }
+    }
+
+    function generateRandomPositionalTeam() {
+        clearAllSlots();
+        let pool = [...playersData].sort(() => Math.random() - 0.5);
+        let assigned = new Set();
+        const map = { "PO": ["GK"], "DFC": ["DF"], "DFI": ["LI", "DF"], "DFD": ["LD", "DF"], "MC": ["MC", "MC IZQUIERDO", "MC DERECHO", "MC DEFENSIVO"], "MCD": ["MC DEFENSIVO", "MC"], "MCO": ["MC"], "MI": ["LI", "MC"], "MD": ["LD", "MC"], "ED": ["ED", "FW"], "EI": ["EI", "FW"], "DC": ["FW"] };
+        const scheme = document.getElementById('formation-select').value;
+        
+        formationCoordinates[scheme].forEach(slot => {
+            let idx = pool.findIndex(p => !assigned.has(p.name) && p.pos.toUpperCase().split(',').some(pos => (map[slot.role] || []).includes(pos.trim())));
+            if(idx !== -1) { pitchPlayersState[slot.id] = pool[idx]; renderSlotContent(slot.id, slot.role); assigned.add(pool[idx].name); pool.splice(idx, 1); }
+        });
+        pool.forEach((p, i) => { if(i < 5) { pitchPlayersState[`bench-${i+1}`] = p; renderSlotContent(`bench-${i+1}`, "SUP"); } });
+    }
+
+    function clearAllSlots() { pitchPlayersState = {}; changeFormation(); }
+    function selectSlot(id) { document.querySelectorAll('.player-slot').forEach(el=>el.classList.remove('active')); selectedSlotId = id; document.getElementById(id).classList.add('active'); document.getElementById('slot-status').innerText = `Asignando a: ${getCurrentSlotRole(id)}`; }
+    function deselectAllSlots() { document.querySelectorAll('.player-slot').forEach(el=>el.classList.remove('active')); selectedSlotId = null; document.getElementById('slot-status').innerText = "Selecciona un hueco"; }
+    function getCurrentSlotRole(id) { return id.startsWith('bench') ? "SUP" : (formationCoordinates[document.getElementById('formation-select').value].find(c=>c.id===id)?.role || "JUG"); }
+    function getFallbackAvatar(name) { const initials = name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase(); return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%231e3a8a"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="32" font-weight="bold" fill="%23ffffff">${initials}</text></svg>`; }
+
+    window.onload = init;
+</script>
+</body>
+</html>
