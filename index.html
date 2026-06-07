@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blue Lock Team Builder Ultimate</title>
+    <title>Blue Lock / Inazuma Eleven - Team Builder Ultimate</title>
     <style>
         :root {
             --bg-color: #0a1128;
@@ -357,7 +357,7 @@
 </head>
 <body>
 
-    <h1>Blue Lock Team Builder Ultimate</h1>
+    <h1>Blue Lock / Inazuma Eleven - Team Builder Ultimate</h1>
 
     <div class="controls">
         <div>
@@ -366,13 +366,14 @@
                 <option value="4-3-3">4-3-3</option>
                 <option value="4-4-2">4-4-2</option>
                 <option value="3-5-2">3-5-2</option>
+                <option value="5-3-2">5-3-2</option>
             </select>
         </div>
         <button class="btn-random" onclick="generateRandomTeam()">Equipo Aleatorio 🎲</button>
 	<button class="btn-random" onclick="generateRandomPositionalTeam()">🎲 Equipo Inteligente</button>
         <button class="btn-danger" onclick="clearAllSlots()">Limpiar Campo ❌</button>
     </div>
-    	
+
     <div class="main-container">
         <div class="left-column">
             <div class="football-field" id="field">
@@ -419,11 +420,9 @@
         </div>
     </div>
 
-
     <script>
-        const equipos = ["Equipo Z", "Equipo Y", "Equipo X", "Equipo W", "Equipo V", "Segunda Selección", "Quinteto Mundial", "Selección Sub-20", "Bastard Munchen", "F.C Barcha", "Manshine City", "Ubers", "P.X.G", "Nigeria", "Francia", "Desconocido"];
-        
-       const playersData = [
+        // Array saneado sin parámetros dinámicos de Fandom para garantizar carga directa
+        const playersData = [
             { name: "Ryosuke Kira", team: "Equipo Z", club: "Side-B, Eliminado", pos: "FW", img: "https://static.wikia.nocookie.net/bluelock/images/b/b1/Ryosuke_Kira.png" },
             { name: "Asahi Naruhaya", team: "Equipo Z", club: "Eliminado", pos: "FW", img: "https://i.ytimg.com/vi/xyaov95ywao/maxresdefault.jpg" },
             { name: "Gin Gagamaru", team: "Equipo Z", club: "Bastard Munchen", pos: "FW, GK", img: "https://static.wikia.nocookie.net/bluelock/images/7/79/Gin_Gagamaru.png" },
@@ -596,7 +595,7 @@
             "Segunda Seleccion", "Quinteto Mundial", "Selección Sub-20",
             "Bastard Munchen", "F.C Barcha", "Manshine City", "Ubers",
             "P.X.G", "Nigeria", "Francia", "Side-B"
-	 ];
+        ];
 
         const formationCoordinates = {
             "4-3-3": [
@@ -639,154 +638,264 @@
                 { id: "slot-11", top: "24%", left: "67%", role: "DC" }
             ]
         };
+	let firstSelectedSlotId = null;
+        let selectedSlotId = null;
+        let pitchPlayersState = {};
 
-    let selectedSlotId = null;
-    let firstSelectedSlotId = null;
-    let pitchPlayersState = {};
-
-    function init() {
-        buildAccordion();
-        changeFormation();
-    }
-
-    // --- LÓGICA DE INTERCAMBIO (SWAP) ---
-    function handleSlotClick(slotId) {
-        if (selectedSlotId && selectedSlotId === slotId) return;
-
-        if (!firstSelectedSlotId) {
-            firstSelectedSlotId = slotId;
-            document.getElementById(slotId).style.border = "3px solid #00b4d8"; 
-        } else {
-            const secondSlotId = slotId;
-            if (firstSelectedSlotId !== secondSlotId) {
-                const p1 = pitchPlayersState[firstSelectedSlotId];
-                const p2 = pitchPlayersState[secondSlotId];
-                pitchPlayersState[firstSelectedSlotId] = p2;
-                pitchPlayersState[secondSlotId] = p1;
-                renderSlotContent(firstSelectedSlotId, getCurrentSlotRole(firstSelectedSlotId));
-                renderSlotContent(secondSlotId, getCurrentSlotRole(secondSlotId));
-            }
-            document.getElementById(firstSelectedSlotId).style.border = ""; 
-            firstSelectedSlotId = null;
+        function init() {
+            buildAccordion();
+            changeFormation();
         }
-    }
 
-    // --- RENDERIZADO DE SLOTS ---
-    function renderSlotContent(id, defaultRole = "JUG") {
-        const slot = document.getElementById(id);
-        if (!slot) return;
-        slot.onclick = () => handleSlotClick(id);
-
-        const player = pitchPlayersState[id];
-        if (player) {
-            slot.innerHTML = `
-                <div class="player-avatar" style="border-color: var(--accent-color);">
-                    <img src="${player.img}" alt="${player.name}" onerror="this.onerror=null; this.src=getFallbackAvatar('${player.name}');">
-                </div>
-                <div class="player-name">${player.name}</div>
-            `;
-        } else {
-            const displayRole = id.startsWith('bench') ? "SUP" : defaultRole;
-            slot.innerHTML = `<div class="player-avatar">${displayRole}</div><div class="player-name">Vacío</div>`;
+        // Generador fallback dinámico de iniciales en formato SVG
+        function getFallbackAvatar(name) {
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%231e3a8a"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="%23ffffff">${initials}</text></svg>`;
         }
-    }
 
-    // --- CONSTRUCCIÓN DEL ACORDEÓN (LISTA DE JUGADORES) ---
-    function buildAccordion() {
-        const container = document.getElementById('accordion-container');
-        container.innerHTML = '';
-        categoriesOrder.forEach(catKey => {
-            const matchPlayers = playersData.filter(p => p.team === catKey);
-            if (matchPlayers.length === 0) return;
+        function buildAccordion() {
+            const container = document.getElementById('accordion-container');
+            container.innerHTML = '';
 
-            const detailsElement = document.createElement('details');
-            detailsElement.id = `cat-${catKey.replace(/\s+/g, '-')}`;
-            detailsElement.innerHTML = `<summary><span>${catKey} (${matchPlayers.length})</span> <span>▼</span></summary>`;
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'group-content';
+            categoriesOrder.forEach(catKey => {
+                const matchPlayers = playersData.filter(p => p.team === catKey);
+                if (matchPlayers.length === 0) return;
 
-            matchPlayers.forEach(player => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'player-item';
-                itemDiv.setAttribute('data-name', player.name.toLowerCase());
-                itemDiv.onclick = () => assignPlayerToSelectedSlot(player);
-                itemDiv.innerHTML = `
-                    <div class="info"><strong>${player.name}</strong><span class="sub-info">${player.club}</span></div>
-                    <div class="player-item-photo"><img src="${player.img}" alt="${player.name}" onerror="this.onerror=null; this.src=getFallbackAvatar('${player.name}');"></div>
-                `;
-                contentDiv.appendChild(itemDiv);
+                const detailsElement = document.createElement('details');
+                detailsElement.id = `cat-${catKey.replace(/\s+/g, '-')}`;
+                
+                const summaryElement = document.createElement('summary');
+                summaryElement.innerHTML = `<span>${catKey} (${matchPlayers.length})</span> <span>▼</span>`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'group-content';
+
+                matchPlayers.forEach(player => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'player-item';
+                    itemDiv.setAttribute('data-name', player.name.toLowerCase());
+                    itemDiv.onclick = () => assignPlayerToSelectedSlot(player);
+
+                    itemDiv.innerHTML = `
+                        <div class="info">
+                            <strong style="font-size: 13px;">${player.name}</strong>
+                            <span class="sub-info">${player.club}</span>
+                        </div>
+                        <div class="player-item-photo">
+                            <img src="${player.img}" alt="${player.name}" onerror="this.onerror=null; this.src=getFallbackAvatar('${player.name}');">
+                        </div>
+                    `;
+                    contentDiv.appendChild(itemDiv);
+                });
+
+                detailsElement.appendChild(summaryElement);
+                detailsElement.appendChild(contentDiv);
+                container.appendChild(detailsElement);
             });
-            detailsElement.appendChild(contentDiv);
-            container.appendChild(detailsElement);
-        });
-    }
+        }
 
-    // --- FUNCIONES DE ASIGNACIÓN Y RESET ---
-    function assignPlayerToSelectedSlot(player) {
-        if (!selectedSlotId) { alert("Selecciona un hueco primero."); return; }
-        for (let key in pitchPlayersState) {
-            if (pitchPlayersState[key] && pitchPlayersState[key].name === player.name) {
-                pitchPlayersState[key] = null;
-                renderSlotContent(key, getCurrentSlotRole(key));
+        function changeFormation() {
+            const field = document.getElementById('field');
+            const scheme = document.getElementById('formation-select').value;
+            const currentCoords = formationCoordinates[scheme];
+
+            document.querySelectorAll('.field-slot').forEach(el => el.remove());
+
+            currentCoords.forEach(coord => {
+                const slot = document.createElement('div');
+                slot.className = 'player-slot field-slot';
+                slot.id = coord.id;
+                slot.style.top = coord.top;
+                slot.style.left = coord.left;
+                slot.onclick = () => selectSlot(coord.id);
+
+                field.appendChild(slot);
+                renderSlotContent(coord.id, coord.role);
+            });
+
+            if (selectedSlotId && !document.getElementById(selectedSlotId)) {
+                deselectAllSlots();
+            } else if (selectedSlotId) {
+                selectSlot(selectedSlotId);
             }
         }
-        pitchPlayersState[selectedSlotId] = player;
-        renderSlotContent(selectedSlotId, getCurrentSlotRole(selectedSlotId));
-        deselectAllSlots();
-    }
 
-    function changeFormation() {
-        const field = document.getElementById('field');
-        const scheme = document.getElementById('formation-select').value;
-        document.querySelectorAll('.field-slot').forEach(el => el.remove());
-        formationCoordinates[scheme].forEach(coord => {
-            const slot = document.createElement('div');
-            slot.className = 'player-slot field-slot';
-            slot.id = coord.id;
-            slot.style.top = coord.top;
-            slot.style.left = coord.left;
-            slot.onclick = () => selectSlot(coord.id);
-            field.appendChild(slot);
-            renderSlotContent(coord.id, coord.role);
-        });
-        for(let i=1; i<=5; i++) renderSlotContent(`bench-${i}`, "SUP");
-    }
-
-    function generateRandomTeam() {
-        clearAllSlots();
-        let pool = [...playersData].sort(() => Math.random() - 0.5);
-        const scheme = document.getElementById('formation-select').value;
-        const slots = formationCoordinates[scheme];
-        
-        slots.forEach((coord, i) => { if(pool[i]) { pitchPlayersState[coord.id] = pool[i]; renderSlotContent(coord.id, coord.role); } });
-        for(let i=1; i<=5; i++) { 
-            let p = pool[slots.length + i - 1]; 
-            if(p) { pitchPlayersState[`bench-${i}`] = p; renderSlotContent(`bench-${i}`, "SUP"); } 
+        function selectSlot(id) {
+            deselectAllSlots();
+            selectedSlotId = id;
+            const element = document.getElementById(id);
+            if (element) {
+                element.classList.add('active');
+                const isBench = id.startsWith('bench');
+                let roleLabel = isBench ? "Suplente" : getCurrentSlotRole(id);
+                document.getElementById('slot-status').innerText = `Asignando jugador a posición: ${roleLabel}`;
+            }
         }
-    }
 
-    function generateRandomPositionalTeam() {
-        clearAllSlots();
-        let pool = [...playersData].sort(() => Math.random() - 0.5);
-        let assigned = new Set();
-        const map = { "PO": ["GK"], "DFC": ["DF"], "DFI": ["LI", "DF"], "DFD": ["LD", "DF"], "MC": ["MC", "MC IZQUIERDO", "MC DERECHO", "MC DEFENSIVO"], "MCD": ["MC DEFENSIVO", "MC"], "MCO": ["MC"], "MI": ["LI", "MC"], "MD": ["LD", "MC"], "ED": ["ED", "FW"], "EI": ["EI", "FW"], "DC": ["FW"] };
-        const scheme = document.getElementById('formation-select').value;
+        function deselectAllSlots() {
+            document.querySelectorAll('.player-slot').forEach(el => el.classList.remove('active'));
+            selectedSlotId = null;
+            document.getElementById('slot-status').innerText = "Selecciona un espacio en el campo o banquillo";
+        }
+
+        function getCurrentSlotRole(id) {
+            const scheme = document.getElementById('formation-select').value;
+            const coord = formationCoordinates[scheme].find(c => c.id === id);
+            return coord ? coord.role : "JUG";
+        }
+
+        function renderSlotContent(id, defaultRole = "JUG") {
+            const slot = document.getElementById(id);
+            if (!slot) return;
+
+            const player = pitchPlayersState[id];
+            if (player) {
+                slot.innerHTML = `
+                    <div class="player-avatar" style="border-color: var(--accent-color);">
+                        <img src="${player.img}" alt="${player.name}" onerror="this.onerror=null; this.src=getFallbackAvatar('${player.name}');">
+                    </div>
+                    <div class="player-name">${player.name}</div>
+                `;
+            } else {
+                const displayRole = id.startsWith('bench') ? "SUP" : defaultRole;
+                slot.innerHTML = `
+                    <div class="player-avatar">${displayRole}</div>
+                    <div class="player-name">Vacío</div>
+                `;
+            }
+        }
+
+        function assignPlayerToSelectedSlot(player) {
+            if (!selectedSlotId) {
+                alert("Por favor, selecciona primero un hueco en el campo o en los suplentes.");
+                return;
+            }
+
+            for (let key in pitchPlayersState) {
+                if (pitchPlayersState[key] && pitchPlayersState[key].name === player.name) {
+                    pitchPlayersState[key] = null;
+                    const role = key.startsWith('bench') ? "SUP" : getCurrentSlotRole(key);
+                    renderSlotContent(key, role);
+                }
+            }
+
+            pitchPlayersState[selectedSlotId] = player;
+            const currentRole = selectedSlotId.startsWith('bench') ? "SUP" : getCurrentSlotRole(selectedSlotId);
+            renderSlotContent(selectedSlotId, currentRole);
+
+            autoSelectNextSlot();
+        }
+
+        function autoSelectNextSlot() {
+            const scheme = document.getElementById('formation-select').value;
+            const currentCoords = formationCoordinates[scheme];
+            
+            for (let coord of currentCoords) {
+                if (!pitchPlayersState[coord.id]) {
+                    selectSlot(coord.id);
+                    return;
+                }
+            }
+            for (let i = 1; i <= 5; i++) {
+                const benchId = `bench-${i}`;
+                if (!pitchPlayersState[benchId]) {
+                    selectSlot(benchId);
+                    return;
+                }
+            }
+            deselectAllSlots();
+        }
+
+        function clearAllSlots() {
+            pitchPlayersState = {};
+            const scheme = document.getElementById('formation-select').value;
+            formationCoordinates[scheme].forEach(c => renderSlotContent(c.id, c.role));
+            for (let i = 1; i <= 5; i++) {
+                renderSlotContent(`bench-${i}`, "SUP");
+            }
+            deselectAllSlots();
+        }
+
+        function generateRandomTeam() {
+            clearAllSlots();
+            let pool = [...playersData];
+            
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+
+            const scheme = document.getElementById('formation-select').value;
+            const currentCoords = formationCoordinates[scheme];
+
+            currentCoords.forEach((coord, index) => {
+                pitchPlayersState[coord.id] = pool[index];
+                renderSlotContent(coord.id, coord.role);
+            });
+
+            for (let i = 1; i <= 5; i++) {
+                const benchId = `bench-${i}`;
+                pitchPlayersState[benchId] = pool[currentCoords.length + (i - 1)];
+                renderSlotContent(benchId, "SUP");
+            }
+            deselectAllSlots();
+        }
+	 function generateRandomPositionalTeam() {
+       	    clearAllSlots();
+      	    let pool = [...playersData].sort(() => Math.random() - 0.5);
+            let assigned = new Set();
+            const map = { "PO": ["GK"], "DFC": ["DF"], "DFI": ["LI", "DF"], "DFD": ["LD", "DF"], "MC": ["MC", "MC IZQUIERDO", "MC DERECHO", "MC DEFENSIVO"], "MCD": ["MC DEFENSIVO", "MC"], "MCO": ["MC"], "MI": ["LI", "MC"], "MD": ["LD", "MC"], "ED": ["ED", "FW"], "EI": ["EI", "FW"], "DC": ["FW"] };
+            const scheme = document.getElementById('formation-select').value;
         
-        formationCoordinates[scheme].forEach(slot => {
-            let idx = pool.findIndex(p => !assigned.has(p.name) && p.pos.toUpperCase().split(',').some(pos => (map[slot.role] || []).includes(pos.trim())));
-            if(idx !== -1) { pitchPlayersState[slot.id] = pool[idx]; renderSlotContent(slot.id, slot.role); assigned.add(pool[idx].name); pool.splice(idx, 1); }
-        });
-        pool.forEach((p, i) => { if(i < 5) { pitchPlayersState[`bench-${i+1}`] = p; renderSlotContent(`bench-${i+1}`, "SUP"); } });
-    }
+            formationCoordinates[scheme].forEach(slot => {
+            	let idx = pool.findIndex(p => !assigned.has(p.name) && p.pos.toUpperCase().split(',').some(pos => (map[slot.role] || []).includes(pos.trim())));
+            	if(idx !== -1) { pitchPlayersState[slot.id] = pool[idx]; renderSlotContent(slot.id, slot.role); assigned.add(pool[idx].name); pool.splice(idx, 1); }
+            });
+            pool.forEach((p, i) => { if(i < 5) { pitchPlayersState[`bench-${i+1}`] = p; renderSlotContent(`bench-${i+1}`, "SUP"); } });
+    	}
+        function filterPlayers() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const items = document.querySelectorAll('.player-item');
 
-    function clearAllSlots() { pitchPlayersState = {}; changeFormation(); }
-    function selectSlot(id) { document.querySelectorAll('.player-slot').forEach(el=>el.classList.remove('active')); selectedSlotId = id; document.getElementById(id).classList.add('active'); document.getElementById('slot-status').innerText = `Asignando a: ${getCurrentSlotRole(id)}`; }
-    function deselectAllSlots() { document.querySelectorAll('.player-slot').forEach(el=>el.classList.remove('active')); selectedSlotId = null; document.getElementById('slot-status').innerText = "Selecciona un hueco"; }
-    function getCurrentSlotRole(id) { return id.startsWith('bench') ? "SUP" : (formationCoordinates[document.getElementById('formation-select').value].find(c=>c.id===id)?.role || "JUG"); }
-    function getFallbackAvatar(name) { const initials = name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase(); return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%231e3a8a"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="32" font-weight="bold" fill="%23ffffff">${initials}</text></svg>`; }
+            items.forEach(item => {
+                const name = item.getAttribute('data-name');
+                if (name.includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
 
-    window.onload = init;
-</script>
+            document.querySelectorAll('details').forEach(details => {
+                const visibleItems = details.querySelectorAll('.player-item[style="display: flex;"]');
+                if (query.length > 0 && (visibleItems.length > 0 || details.querySelectorAll('.player-item:not([style*="display: none"])').length > 0)) {
+                    details.open = true;
+                } else if (query.length === 0) {
+                    details.open = false;
+                }
+            });
+        }
+	function handleSlotClick(slotId) {
+        	if (selectedSlotId && selectedSlotId === slotId) return;
+
+        	if (!firstSelectedSlotId) {
+            	    firstSelectedSlotId = slotId;
+                    document.getElementById(slotId).style.border = "3px solid #00b4d8"; 
+       		 } else {
+            	     const secondSlotId = slotId;
+            	     if (firstSelectedSlotId !== secondSlotId) {
+                	const p1 = pitchPlayersState[firstSelectedSlotId];
+                	const p2 = pitchPlayersState[secondSlotId];
+                	pitchPlayersState[firstSelectedSlotId] = p2;
+                	pitchPlayersState[secondSlotId] = p1;
+                	renderSlotContent(firstSelectedSlotId, getCurrentSlotRole(firstSelectedSlotId));
+                	renderSlotContent(secondSlotId, getCurrentSlotRole(secondSlotId));
+            	}
+            	document.getElementById(firstSelectedSlotId).style.border = ""; 
+            	firstSelectedSlotId = null;
+        	}
+    	}
+        window.onload = init;
+    </script>
 </body>
 </html>
